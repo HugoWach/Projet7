@@ -1,47 +1,18 @@
-const http = require('http');
-const app = require('./app');
+/* Import des modules necessaires */
+const app = require("./app");
+const mongoose = require("mongoose");
+const dotenv = require("dotenv").config({ encoding: "latin1" });
 
-const normalizePort = val => {
-    const port = parseInt(val, 10);
+/* Connection BDD mongoose */
+mongoose
+    .connect(process.env.DBCONNECT)
 
-    if (isNaN(port)) {
-        return val;
-    }
-    if (port >= 0) {
-        return port;
-    }
-    return false;
-};
-const port = normalizePort(process.env.PORT || '3000');
-app.set('port', port);
-
-const errorHandler = error => {
-    if (error.syscall !== 'listen') {
-        throw error;
-    }
-    const address = server.address();
-    const bind = typeof address === 'string' ? 'pipe ' + address : 'port: ' + port;
-    switch (error.code) {
-        case 'EACCES':
-            console.error(bind + ' requires elevated privileges.');
-            process.exit(1);
-            break;
-        case 'EADDRINUSE':
-            console.error(bind + ' is already in use.');
-            process.exit(1);
-            break;
-        default:
-            throw error;
-    }
-};
-
-const server = http.createServer(app);
-
-server.on('error', errorHandler);
-server.on('listening', () => {
-    const address = server.address();
-    const bind = typeof address === 'string' ? 'pipe ' + address : 'port ' + port;
-    console.log('Listening on ' + bind);
-});
-
-server.listen(port);
+    .then(() =>
+        app.listen(process.env.SERVER_PORT, () => {
+            console.log(`🚀 Express running → On PORT : ${process.env.SERVER_PORT}.⭐️ `);
+        })
+    )
+    .catch(err => {
+        console.log(`1. 🔥 Erreur: server.js`);
+        console.error(`🚫 Error → : ${err}`);
+    });
