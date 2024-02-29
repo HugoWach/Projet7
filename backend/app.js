@@ -2,6 +2,8 @@
 const express = require('express');
 const path = require('path');
 const authRoutes = require('./routes/Auth.routes');
+const booksRoutes = require('./routes/Book.routes');
+const cors = require("cors");
 
 /* Initialisation de l'API */
 const app = express();
@@ -23,6 +25,13 @@ app.use((req, res, next) => {
     next();
 });
 
+app.use(
+    cors({
+        origin: true,
+        optionsSuccessStatus: 200,
+        credentials: true,
+    })
+);
 
 /* Securite en tete */
 const helmet = require("helmet");
@@ -47,5 +56,6 @@ app.use(
 app.use("/images", express.static(path.join(__dirname, "images")));
 
 app.use("/api/auth", authRoutes);
+app.use("/api/books", booksRoutes);
 
 module.exports = app;
