@@ -25,18 +25,18 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use(
-    cors({
-        origin: true,
-        optionsSuccessStatus: 200,
-        credentials: true,
-    })
-);
+app.use(cors({
+    credentials: true,
+}));
 
 /* Securite en tete */
 const helmet = require("helmet");
 
-app.use(helmet());
+app.use(
+    helmet({
+        crossOriginResourcePolicy: false,
+    })
+);
 
 /* RateLimit */
 const rateLimit = require("express-rate-limit");
@@ -52,8 +52,8 @@ app.use(
 );
 
 /* Mise en place du routage */
-
-app.use("/images", express.static(path.join(__dirname, "images")));
+app.use(express.static('images'));
+app.use("/images", express.static(path.join("images")));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/books", booksRoutes);

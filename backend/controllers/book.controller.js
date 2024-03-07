@@ -21,6 +21,16 @@ exports.getBookById = async (req, res, next) => {
     }
 }
 
+exports.getBestBooks = async (req, res, next) => {
+    try {
+        const bestBooks = await Book.find().sort({ averageRating: -1 }).limit(3);
+        return res.status(200).json(bestBooks);
+    }
+    catch (error) {
+        return res.status(404).json(error);
+    }
+}
+
 exports.createNewBook = async (req, res, next) => {
     const BookObject = JSON.parse(req.body.book);
 
@@ -48,20 +58,37 @@ exports.createNewBook = async (req, res, next) => {
 }
 
 exports.updateBook = (req, res, next) => {
+
     const BookObject = req.file ? {
         ...JSON.parse(req.body.book),
         imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
     } : { ...req.body };
-
     delete BookObject._userId;
     Book.findOne({ _id: req.params.id })
         .then((book) => {
             if (book.userId != req.auth.userId) {
                 res.status(401).json({ message: 'Not authorized' });
             } else {
-                Book.updateOne({ _id: req.params.id }, { ...bookObject, _id: req.params.id })
-                    .then(() => res.status(200).json({ message: 'Objet modifié!' }))
-                    .catch(error => res.status(401).json({ error }));
+
+                if (req.file != undefined) {
+                    let filenametodelete = book.imageUrl.split('images/')[1];
+                    fs.unlink(`./images/${filenametodelete}`, (error) => {
+                        if (error) {
+                            console.log(error, filenametodelete)
+                        } else {
+                            Book.updateOne({ _id: req.params.id }, { ...BookObject, _id: req.params.id })
+                                .then(() => res.status(200).json({ message: 'Objet modifié!' }))
+                                .catch(error => res.status(401).json({ error }));
+                        }
+                    })
+                } else {
+                    Book.updateOne({ _id: req.params.id }, { ...BookObject, _id: req.params.id })
+                        .then(() => res.status(200).json({ message: 'Objet modifié!' }))
+                        .catch(error => res.status(401).json({ error }));
+
+                }
+
+
             }
         })
         .catch((error) => {
@@ -87,3 +114,30 @@ exports.deleteBook = (req, res, next) => {
             res.status(500).json({ error });
         });
 };
+
+const calcAverage = (book) => {
+    const grades = book.ratings.map(ratings => ratings.grade);
+    const result = grades.reduce((accumulator, currentValue) => accumulator + currentValue) / grades.length;
+    return result.toFixed(1);
+}
+
+exports.addNewGrade = async (req, res, next) => {
+    try {
+        if (req.body.rating > 5 || req.body.rating < 0) {
+            return res.status(400).json({ message: "La note n'est pas bonne" });
+        }
+        const bookRateToUpdate = await Book.findOne({ _id: req.params.id, "ratings.userId": { $nin: req.auth.userId } });
+
+        if (bookRateToUpdate) {
+            bookRateToUpdate.ratings.push({ userId: req.auth.userId, grade: req.body.rating });
+            bookRateToUpdate.averageRating = calcAverage(bookRateToUpdate);
+            await bookRateToUpdate.save();
+            return res.status(201).json(bookRateToUpdate);
+        } else {
+            return res.status(403).json({ message: 'vote impossible' })
+        }
+    }
+    catch (error) {
+        return res.status(400).json(error);
+    }
+}

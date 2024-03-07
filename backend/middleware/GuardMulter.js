@@ -15,14 +15,7 @@ const storage = multer.diskStorage({
         callback(null, "images");
     },
     filename: (req, file, callback) => {
-        const name = file.originalname.split(" ").join("_");
-        const extension = MIME_TYPES[file.mimetype];
-        callback(null, name + Date.now() + "." + extension);
-    },
-
-    filename: (req, file, callback) => {
         const originalName = file.originalname;
-        const nameWithoutSpaces = originalName.split(".");
 
         const extension = MIME_TYPES[file.mimetype];
 
@@ -30,7 +23,7 @@ const storage = multer.diskStorage({
             return callback(new Error("Unsupported file type"));
         }
 
-        const finalFileName = `${nameWithoutSpaces[0]}-${Date.now()}.${extension}`;
+        const finalFileName = `${Date.now()}.${extension}`;
         callback(null, finalFileName);
     },
 });
