@@ -33,6 +33,7 @@ exports.getBestBooks = async (req, res, next) => {
 
 exports.createNewBook = async (req, res, next) => {
     const BookObject = JSON.parse(req.body.book);
+    console.log(req.file.size)
 
     const nextYear = new Date().getFullYear() + 1;
 
@@ -41,6 +42,9 @@ exports.createNewBook = async (req, res, next) => {
     }
     if (BookObject.year > nextYear) {
         return res.status(400).json({ message: "Merci de renseigner une date de publication valide" });
+    }
+    if (req.file.size > 5000000) {
+        return res.status(400).json({ message: "Le poids de l'image est trop volumineux" });
     }
 
     try {
