@@ -75,6 +75,11 @@ exports.updateBook = (req, res, next) => {
             } else {
 
                 if (req.file != undefined) {
+
+                    if (req.file.size > 5000000) {
+                        return res.status(400).json({ message: "Le poids de l'image est trop volumineux" });
+                    }
+
                     let filenametodelete = book.imageUrl.split('images/')[1];
                     fs.unlink(`./images/${filenametodelete}`, (error) => {
                         if (error) {
